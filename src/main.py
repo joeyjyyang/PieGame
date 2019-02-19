@@ -23,7 +23,7 @@ class Player:
                 self.ammo = 1
                 self.hitbox = (self.x + 18, self.y + 12, 26, 52) #rectangular hitbox
 
-        def animatePlayer(self, window):
+        def animate(self, window):
                 if self.walkCount + 1 >= 54: #indexing through sprite array, based on fps
                         self.walkCount = 0
 
@@ -60,8 +60,8 @@ class Enemy:
                 self.vel = 3
                 self.hitbox = (self.x + 17, self.y + 2, 31, 57)
 
-        def animateEnemy(self, window):
-                self.moveEnemy() #move first, then update animation
+        def animate(self, window):
+                self.move() #move first, then update animation
                 
                 if self.walkCount + 1 >= 55:
                         self.walkCount = 0
@@ -76,7 +76,7 @@ class Enemy:
                 self.hitbox = (self.x + 17, self.y + 2, 31, 57)
                 pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox
 
-        def moveEnemy(self):
+        def move(self):
                 if self.vel > 0:
                         if self.x + self.vel < self.path[1]: 
                                 self.x += self.vel
@@ -89,6 +89,8 @@ class Enemy:
                         else: #reach path start - switch direction
                                 self.vel = self.vel * -1
                                 self.walkCount = 0
+
+        
                 
 '''class Goblin(Enemy):
         walkRight = [pygame.image.load('R1E.png'), pygame.image.load('R2E.png'), pygame.image.load('R3E.png'), pygame.image.load('R4E.png'), pygame.image.load('R5E.png'), pygame.image.load('R6E.png'), pygame.image.load('R7E.png'), pygame.image.load('R8E.png'), pygame.image.load('R9E.png'), pygame.image.load('R10E.png'), pygame.image.load('R11E.png')]
@@ -103,26 +105,27 @@ class Projectile:
                 self.direction = direction
                 self.vel = 8 * direction
 
-        def animateProjectile(self, window):
+        def animate(self, window):
                 window.blit(self.shuriken, (self.x, self.y))
                 
 class Window:
         bg = pygame.image.load(os.path.join('sprites', 'bg.jpg'))
         
-        def __init__(self, windowHeight, windowWidth, player, enemy):
+        def __init__(self, windowHeight, windowWidth, player, enemies):
                 self.windowHeight = windowHeight
                 self.windowWidth = windowWidth
                 self.window = pygame.display.set_mode((self.windowHeight, self.windowWidth))
                 self.player = player
-                self.enemy = enemy
+                self.enemies = enemies
                 pygame.display.set_caption("Spaghetti User Interface")
 
         def updateWindow(self):
                 self.window.blit(self.bg, (0,0)) 
-                self.player.animatePlayer(self.window)
-                self.enemy.animateEnemy(self.window)
+                self.player.animate(self.window)
+                for enemy in self.enemies:
+                        enemy.animate(self.window)
                 for projectile in self.player.projectiles:
-                        projectile.animateProjectile(self.window)
+                        projectile.animate(self.window)
                 pygame.display.update()
                 
 class Game:
@@ -133,8 +136,10 @@ class Game:
                 self.run = True
                 self.clock = pygame.time.Clock()
                 self.player = Player(250, 410, 64, 64)
-                self.enemy = Enemy(100, 417, 64, 64, 400)
-                self.window = Window(self.windowHeight, self.windowWidth, self.player, self.enemy)
+                self.enemy1 = Enemy(100, 417, 64, 64, 400)
+                self.enemy2 = Enemy(50, 417, 64, 64, 300)
+                self.enemies = [self.enemy1, self.enemy2]
+                self.window = Window(self.windowHeight, self.windowWidth, self.player, self.enemies)
                 
         def startGame(self):
                 pygame.init()
