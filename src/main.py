@@ -9,6 +9,7 @@ import os
 TO DO:
 1. Player and Enemy objects should take Projectile as input
 2. Classes need to be decoupled and modularized
+3. Dependency injection
 '''
 
 class Player:
@@ -32,7 +33,7 @@ class Player:
                 self.projectiles = []
                 self.ammoCount = 1
                 self.ammoCooldown = 0 #ammo cooldown used for basic timer
-                self.hitbox = (self.x + 18, self.y + 12, 26, 52) #rectangular hitbox
+                self.hitbox = (self.x + 18, self.y + 12, 26, 52) #rectangular hitbox - (x, y, width, height)
 
         def animate(self, window):
                 if self.walkCount + 1 >= 54: #indexing through sprite array, based on fps
@@ -54,7 +55,7 @@ class Player:
                                 window.blit(self.walkRight[0], (self.x, self.y))
                                 
                 self.hitbox = (self.x + 18, self.y + 12, 26, 52)
-                pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox     
+                pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox - pygame.draw.rect(screen, color, (x, y, width, height), thickness)
                                       
 class Enemy:
         walkRight = [pygame.image.load(os.path.join('sprites', 'R1E.png')), pygame.image.load(os.path.join('sprites', 'R2E.png')), pygame.image.load(os.path.join('sprites', 'R3E.png')), pygame.image.load(os.path.join('sprites', 'R4E.png')), pygame.image.load(os.path.join('sprites', 'R5E.png')), pygame.image.load(os.path.join('sprites', 'R6E.png')), pygame.image.load(os.path.join('sprites', 'R7E.png')), pygame.image.load(os.path.join('sprites', 'R8E.png')), pygame.image.load(os.path.join('sprites', 'R9E.png')), pygame.image.load(os.path.join('sprites', 'R10E.png')), pygame.image.load(os.path.join('sprites', 'R11E.png'))]
@@ -127,7 +128,11 @@ class Projectile:
                 window.blit(self.shuriken, (self.x, self.y))
                 self.hitbox = (self.x, self.y, 40, 40)
                 pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox
-                
+
+class HitBox:
+        def __init__(self):
+                pass
+
 class Window:
         bg = pygame.image.load(os.path.join('sprites', 'bg.jpg'))
         
@@ -178,7 +183,7 @@ class Game:
                                 self.player.ammoCooldown = 0
                                 
                         for projectile in self.player.projectiles:
-                                
+                                if projectile.
                                 
                                 if projectile.x < self.windowWidth and projectile.x > 0: #projectile onscreen
                                         projectile.x += projectile.vel
