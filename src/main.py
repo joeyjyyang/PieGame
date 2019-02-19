@@ -1,6 +1,16 @@
 import pygame
 import os
 
+'''
+        Author: Joey Yang
+'''
+
+'''
+TO DO:
+1. Player and Enemy objects should take Projectile as input
+2. Classes need to be decoupled and modularized
+'''
+
 class Player:
         walkRight = [pygame.image.load(os.path.join('sprites', 'R1.png')), pygame.image.load(os.path.join('sprites', 'R2.png')), pygame.image.load(os.path.join('sprites', 'R3.png')), pygame.image.load(os.path.join('sprites', 'R5.png')), pygame.image.load(os.path.join('sprites', 'R5.png')), pygame.image.load(os.path.join('sprites', 'R6.png')), pygame.image.load(os.path.join('sprites', 'R7.png')), pygame.image.load(os.path.join('sprites', 'R8.png')), pygame.image.load(os.path.join('sprites', 'R9.png'))]
         walkLeft = [pygame.image.load(os.path.join('sprites', 'L1.png')), pygame.image.load(os.path.join('sprites', 'L2.png')), pygame.image.load(os.path.join('sprites', 'L3.png')), pygame.image.load(os.path.join('sprites', 'L4.png')), pygame.image.load(os.path.join('sprites', 'L5.png')), pygame.image.load(os.path.join('sprites', 'L6.png')), pygame.image.load(os.path.join('sprites', 'L7.png')), pygame.image.load(os.path.join('sprites', 'L8.png')), pygame.image.load(os.path.join('sprites', 'L9.png'))]
@@ -20,7 +30,8 @@ class Player:
                 self.walkCount = 0
                 self.standing = True
                 self.projectiles = []
-                self.ammo = 1
+                self.ammoCount = 1
+                self.ammoCooldown = 0 #ammo cooldown used for basic timer
                 self.hitbox = (self.x + 18, self.y + 12, 26, 52) #rectangular hitbox
 
         def animate(self, window):
@@ -90,12 +101,18 @@ class Enemy:
                                 self.vel = self.vel * -1
                                 self.walkCount = 0
 
+        def hit(self):
+                pass
         
-                
-'''class Goblin(Enemy):
+        def kill(self):
+                pass      
+
+'''
+class Goblin(Enemy):
         walkRight = [pygame.image.load('R1E.png'), pygame.image.load('R2E.png'), pygame.image.load('R3E.png'), pygame.image.load('R4E.png'), pygame.image.load('R5E.png'), pygame.image.load('R6E.png'), pygame.image.load('R7E.png'), pygame.image.load('R8E.png'), pygame.image.load('R9E.png'), pygame.image.load('R10E.png'), pygame.image.load('R11E.png')]
         walkLeft = [pygame.image.load('L1E.png'), pygame.image.load('L2E.png'), pygame.image.load('L3E.png'), pygame.image.load('L4E.png'), pygame.image.load('L5E.png'), pygame.image.load('L6E.png'), pygame.image.load('L7E.png'), pygame.image.load('L8E.png'), pygame.image.load('L9E.png'), pygame.image.load('L10E.png'), pygame.image.load('L11E.png')]
 '''
+
 class Projectile:
         shuriken = pygame.image.load(os.path.join('sprites', 'shuriken.png'))
 
@@ -104,9 +121,12 @@ class Projectile:
                 self.y = y
                 self.direction = direction
                 self.vel = 8 * direction
+                self.hitbox = (self.x, self.y, 40, 40)
 
         def animate(self, window):
                 window.blit(self.shuriken, (self.x, self.y))
+                self.hitbox = (self.x, self.y, 40, 40)
+                pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox
                 
 class Window:
         bg = pygame.image.load(os.path.join('sprites', 'bg.jpg'))
@@ -151,7 +171,15 @@ class Game:
                                 if event.type == pygame.QUIT:
                                         run = False
 
+                        #check player ammo cooldown
+                        if self.player.ammoCooldown > 0:
+                                self.player.ammoCooldown += 1
+                        if self.player.ammoCooldown > 5:
+                                self.player.ammoCooldown = 0
+                                
                         for projectile in self.player.projectiles:
+                                
+                                
                                 if projectile.x < self.windowWidth and projectile.x > 0: #projectile onscreen
                                         projectile.x += projectile.vel
                                 else: #projectile offscreen
@@ -163,13 +191,13 @@ class Game:
                         if keys[pygame.K_ESCAPE]:
                                 self.run = False
                                 
-                        if keys[pygame.K_SPACE]:
+                        if keys[pygame.K_SPACE] and self.player.ammoCooldown == 0: #wait for cooldown before shooting
                                 if self.player.left: #facing left then jump
                                         self.player.direction = -1
                                 else: #facing right then jump or upon spawn
                                         self.player.direction = 1
          
-                                if len(self.player.projectiles) <= self.player.ammo:
+                                if len(self.player.projectiles) <= self.player.ammoCount:
                                         self.player.projectiles.append(Projectile(int(self.player.x + self.player.width//2), int(self.player.y + 17), self.player.direction))
                                         
                         if keys[pygame.K_LEFT] and self.player.x > self.player.vel:
