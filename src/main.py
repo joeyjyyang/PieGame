@@ -21,6 +21,7 @@ class Player:
                 self.standing = True
                 self.projectiles = []
                 self.ammo = 1
+                self.hitbox = (self.x + 18, self.y + 12, 26, 52) #rectangular hitbox
 
         def animatePlayer(self, window):
                 if self.walkCount + 1 >= 54: #indexing through sprite array, based on fps
@@ -40,7 +41,10 @@ class Player:
                                 window.blit(self.walkLeft[0], (self.x, self.y))
                         else: #facing right or upon spawn
                                 window.blit(self.walkRight[0], (self.x, self.y))
-                                        
+                                
+                self.hitbox = (self.x + 18, self.y + 12, 26, 52)
+                pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox     
+                                      
 class Enemy:
         walkRight = [pygame.image.load(os.path.join('sprites', 'R1E.png')), pygame.image.load(os.path.join('sprites', 'R2E.png')), pygame.image.load(os.path.join('sprites', 'R3E.png')), pygame.image.load(os.path.join('sprites', 'R4E.png')), pygame.image.load(os.path.join('sprites', 'R5E.png')), pygame.image.load(os.path.join('sprites', 'R6E.png')), pygame.image.load(os.path.join('sprites', 'R7E.png')), pygame.image.load(os.path.join('sprites', 'R8E.png')), pygame.image.load(os.path.join('sprites', 'R9E.png')), pygame.image.load(os.path.join('sprites', 'R10E.png')), pygame.image.load(os.path.join('sprites', 'R11E.png'))]
         walkLeft = [pygame.image.load(os.path.join('sprites', 'L1E.png')), pygame.image.load(os.path.join('sprites', 'L2E.png')), pygame.image.load(os.path.join('sprites', 'L3E.png')), pygame.image.load(os.path.join('sprites', 'L4E.png')), pygame.image.load(os.path.join('sprites', 'L5E.png')), pygame.image.load(os.path.join('sprites', 'L6E.png')), pygame.image.load(os.path.join('sprites', 'L7E.png')), pygame.image.load(os.path.join('sprites', 'L8E.png')), pygame.image.load(os.path.join('sprites', 'L9E.png')), pygame.image.load(os.path.join('sprites', 'L10E.png')), pygame.image.load(os.path.join('sprites', 'L11E.png'))]
@@ -54,9 +58,10 @@ class Enemy:
                 self.path = [self.x, self.end] #start and end of path
                 self.walkCount = 0
                 self.vel = 3
+                self.hitbox = (self.x + 17, self.y + 2, 31, 57)
 
         def animateEnemy(self, window):
-                self.moveEnemy()
+                self.moveEnemy() #move first, then update animation
                 
                 if self.walkCount + 1 >= 55:
                         self.walkCount = 0
@@ -67,7 +72,9 @@ class Enemy:
                 else: #walking left
                         window.blit(self.walkLeft[self.walkCount//5], (self.x, self.y))
                         self.walkCount +=1
-                
+
+                self.hitbox = (self.x + 17, self.y + 2, 31, 57)
+                pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox
 
         def moveEnemy(self):
                 if self.vel > 0:
@@ -97,7 +104,6 @@ class Projectile:
                 self.vel = 8 * direction
 
         def animateProjectile(self, window):
-                #pygame.draw.circle(window, self.color, (self.x, self.y), self.radius)
                 window.blit(self.shuriken, (self.x, self.y))
                 
 class Window:
@@ -153,13 +159,11 @@ class Game:
                                 self.run = False
                                 
                         if keys[pygame.K_SPACE]:
-                                if self.player.left:
+                                if self.player.left: #facing left then jump
                                         self.player.direction = -1
-                                elif self.player.right:
+                                else: #facing right then jump or upon spawn
                                         self.player.direction = 1
-                                else: #upon spawn - right
-                                        self.player.direction = 1
-                                        
+         
                                 if len(self.player.projectiles) <= self.player.ammo:
                                         self.player.projectiles.append(Projectile(int(self.player.x + self.player.width//2), int(self.player.y + 17), self.player.direction))
                                         
@@ -170,8 +174,8 @@ class Game:
                                 self.player.standing = False
                         elif keys[pygame.K_RIGHT] and self.player.x < self.windowWidth - self.player.width - self.player.vel:
                                 self.player.x += self.player.vel
-                                self.player.right = True
                                 self.player.left = False
+                                self.player.right = True
                                 self.player.standing = False
                         else:
                                 self.player.standing = True
