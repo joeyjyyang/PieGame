@@ -33,7 +33,7 @@ class Player:
                 self.projectiles = []
                 self.ammoCount = 1
                 self.ammoCooldown = 0 #ammo cooldown used for basic timer
-                self.hitbox = (self.x + 18, self.y + 12, 26, 52) #rectangular hitbox - (x, y, width, height)
+                self.hitbox = (self.x + 18, self.y + 12, 26, 52) #rectangular hitbox - (left, top, width, height)
 
         def animate(self, window):
                 if self.walkCount + 1 >= 54: #indexing through sprite array, based on fps
@@ -55,7 +55,7 @@ class Player:
                                 window.blit(self.walkRight[0], (self.x, self.y))
                                 
                 self.hitbox = (self.x + 18, self.y + 12, 26, 52)
-                pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox - pygame.draw.rect(screen, color, (x, y, width, height), thickness)
+                pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox - pygame.draw.rect(screen, color, (left, top, width, height), thickness)
                                       
 class Enemy:
         walkRight = [pygame.image.load(os.path.join('sprites', 'R1E.png')), pygame.image.load(os.path.join('sprites', 'R2E.png')), pygame.image.load(os.path.join('sprites', 'R3E.png')), pygame.image.load(os.path.join('sprites', 'R4E.png')), pygame.image.load(os.path.join('sprites', 'R5E.png')), pygame.image.load(os.path.join('sprites', 'R6E.png')), pygame.image.load(os.path.join('sprites', 'R7E.png')), pygame.image.load(os.path.join('sprites', 'R8E.png')), pygame.image.load(os.path.join('sprites', 'R9E.png')), pygame.image.load(os.path.join('sprites', 'R10E.png')), pygame.image.load(os.path.join('sprites', 'R11E.png'))]
@@ -70,23 +70,27 @@ class Enemy:
                 self.path = [self.x, self.end] #start and end of path
                 self.walkCount = 0
                 self.vel = 3
+                self.health = 1
                 self.hitbox = (self.x + 17, self.y + 2, 31, 57)
+                self.alive = True
 
         def animate(self, window):
-                self.move() #move first, then update animation
-                
-                if self.walkCount + 1 >= 55:
-                        self.walkCount = 0
+                if self.alive: 
+                        self.move() #move first, then update animation
+                        if self.walkCount + 1 >= 55:
+                                self.walkCount = 0
 
-                if self.vel > 0: #walking right
-                        window.blit(self.walkRight[self.walkCount//5], (self.x, self.y))
-                        self.walkCount +=1
-                else: #walking left
-                        window.blit(self.walkLeft[self.walkCount//5], (self.x, self.y))
-                        self.walkCount +=1
+                        if self.vel > 0: #walking right
+                                window.blit(self.walkRight[self.walkCount//5], (self.x, self.y))
+                                self.walkCount +=1
+                        else: #walking left
+                                window.blit(self.walkLeft[self.walkCount//5], (self.x, self.y))
+                                self.walkCount +=1
 
-                self.hitbox = (self.x + 17, self.y + 2, 31, 57)
-                pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox
+                        self.hitbox = (self.x + 17, self.y + 2, 31, 57)
+                        pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox
+                else:   
+                        pass
 
         def move(self):
                 if self.vel > 0:
@@ -103,10 +107,18 @@ class Enemy:
                                 self.walkCount = 0
 
         def hit(self):
-                pass
+                self.health -= 1
+                
+                print("hit")
+
+                if(self.health > 0):
+                        pass
+                else:
+                        self.kill()
         
         def kill(self):
-                pass      
+                print("dead") 
+                self.alive = False      
 
 '''
 class Goblin(Enemy):
@@ -162,13 +174,19 @@ class Game:
                 self.clock = pygame.time.Clock()
                 self.player = Player(250, 410, 64, 64)
                 self.enemy1 = Enemy(100, 417, 64, 64, 400)
-                self.enemy2 = Enemy(50, 417, 64, 64, 300)
-                self.enemies = [self.enemy1, self.enemy2]
+                #self.enemy2 = Enemy(50, 417, 64, 64, 300)
+                #self.enemies = [self.enemy1, self.enemy2]
+                self.enemies = []
                 self.window = Window(self.windowHeight, self.windowWidth, self.player, self.enemies)
                 
+        def spawnEnemy(self):
+                self.enemies.append(self.enemy1)
+
         def startGame(self):
                 pygame.init()
                 
+                self.spawnEnemy()
+
                 while self.run:
                         self.clock.tick(self.fps) # 54 fps
                         
@@ -183,8 +201,12 @@ class Game:
                                 self.player.ammoCooldown = 0
                                 
                         for projectile in self.player.projectiles:
-                                if projectile.
-                                
+                                for enemy in self.enemies:
+                                        if projectile.hitbox[1] >= enemy.hitbox[1] and projectile.hitbox[1] + projectile.hitbox[3] <= enemy.hitbox[1] + enemy.hitbox[3]:
+                                                if projectile.hitbox[0] + projectile.hitbox[2] >= enemy.hitbox[0] and projectile.hitbox[0] <= enemy.hitbox[0] + enemy.hitbox[2]:
+                                                        enemy.hit()
+                                                        self.player.projectiles.pop(self.player.projectiles.index(projectile))
+
                                 if projectile.x < self.windowWidth and projectile.x > 0: #projectile onscreen
                                         projectile.x += projectile.vel
                                 else: #projectile offscreen
@@ -202,7 +224,7 @@ class Game:
                                 else: #facing right then jump or upon spawn
                                         self.player.direction = 1
          
-                                if len(self.player.projectiles) <= self.player.ammoCount:
+                                if len(self.player.projectiles) < self.player.ammoCount:
                                         self.player.projectiles.append(Projectile(int(self.player.x + self.player.width//2), int(self.player.y + 17), self.player.direction))
                                         
                         if keys[pygame.K_LEFT] and self.player.x > self.player.vel:
