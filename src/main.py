@@ -1,5 +1,6 @@
 import pygame
 import os
+from random import seed, randint 
 
 '''
         Author: Joey Yang
@@ -33,7 +34,7 @@ class Player:
                 self.projectiles = []
                 self.ammoCount = 1
                 self.ammoCooldown = 0 #ammo cooldown used for basic timer
-                self.hitbox = (self.x + 18, self.y + 12, 26, 52) #rectangular hitbox - (left, top, width, height)
+                self.hitbox = HitBox(self.x + 18, self.y + 12, 26, 52).rectangle #rectangular hitbox - (left, top, width, height)                
 
         def animate(self, window):
                 if self.walkCount + 1 >= 54: #indexing through sprite array, based on fps
@@ -54,9 +55,12 @@ class Player:
                         else: #facing right or upon spawn
                                 window.blit(self.walkRight[0], (self.x, self.y))
                                 
-                self.hitbox = (self.x + 18, self.y + 12, 26, 52)
+                self.hitbox = HitBox(self.x + 18, self.y + 12, 26, 52).rectangle
                 pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox - pygame.draw.rect(screen, color, (left, top, width, height), thickness)
-                                      
+        
+        def hit(self):
+                print("player hit")     
+
 class Enemy:
         walkRight = [pygame.image.load(os.path.join('sprites', 'R1E.png')), pygame.image.load(os.path.join('sprites', 'R2E.png')), pygame.image.load(os.path.join('sprites', 'R3E.png')), pygame.image.load(os.path.join('sprites', 'R4E.png')), pygame.image.load(os.path.join('sprites', 'R5E.png')), pygame.image.load(os.path.join('sprites', 'R6E.png')), pygame.image.load(os.path.join('sprites', 'R7E.png')), pygame.image.load(os.path.join('sprites', 'R8E.png')), pygame.image.load(os.path.join('sprites', 'R9E.png')), pygame.image.load(os.path.join('sprites', 'R10E.png')), pygame.image.load(os.path.join('sprites', 'R11E.png'))]
         walkLeft = [pygame.image.load(os.path.join('sprites', 'L1E.png')), pygame.image.load(os.path.join('sprites', 'L2E.png')), pygame.image.load(os.path.join('sprites', 'L3E.png')), pygame.image.load(os.path.join('sprites', 'L4E.png')), pygame.image.load(os.path.join('sprites', 'L5E.png')), pygame.image.load(os.path.join('sprites', 'L6E.png')), pygame.image.load(os.path.join('sprites', 'L7E.png')), pygame.image.load(os.path.join('sprites', 'L8E.png')), pygame.image.load(os.path.join('sprites', 'L9E.png')), pygame.image.load(os.path.join('sprites', 'L10E.png')), pygame.image.load(os.path.join('sprites', 'L11E.png'))]
@@ -71,7 +75,7 @@ class Enemy:
                 self.walkCount = 0
                 self.vel = 3
                 self.health = 1
-                self.hitbox = (self.x + 17, self.y + 2, 31, 57)
+                self.hitbox = HitBox(self.x + 17, self.y + 2, 31, 57).rectangle
                 self.alive = True
 
         def animate(self, window):
@@ -87,10 +91,9 @@ class Enemy:
                                 window.blit(self.walkLeft[self.walkCount//5], (self.x, self.y))
                                 self.walkCount +=1
 
-                        self.hitbox = (self.x + 17, self.y + 2, 31, 57)
+                        self.hitbox = HitBox(self.x + 17, self.y + 2, 31, 57).rectangle
                         pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox
-                else:   
-                        pass
+
 
         def move(self):
                 if self.vel > 0:
@@ -107,18 +110,17 @@ class Enemy:
                                 self.walkCount = 0
 
         def hit(self):
-                self.health -= 1
-                
                 print("hit")
 
-                if(self.health > 0):
-                        pass
+                if(self.health > 1):
+                        self.health -= 1
                 else:
                         self.kill()
         
         def kill(self):
                 print("dead") 
-                self.alive = False      
+                self.alive = False 
+                pygame.display.update()     
 
 '''
 class Goblin(Enemy):
@@ -134,17 +136,21 @@ class Projectile:
                 self.y = y
                 self.direction = direction
                 self.vel = 8 * direction
-                self.hitbox = (self.x, self.y, 40, 40)
+                self.hitbox = HitBox(self.x, self.y, 40, 40).rectangle
 
         def animate(self, window):
                 window.blit(self.shuriken, (self.x, self.y))
-                self.hitbox = (self.x, self.y, 40, 40)
+                self.hitbox = HitBox(self.x, self.y, 40, 40).rectangle
                 pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2) #draw hitbox
 
 class HitBox:
-        def __init__(self):
-                pass
-
+        def __init__(self, left, top, width, height):
+                self.left = left
+                self.top = top
+                self.width = width
+                self.height = height
+                self.rectangle = (self.left, self.top, self.width, self.height)
+        
 class Window:
         bg = pygame.image.load(os.path.join('sprites', 'bg.jpg'))
         
@@ -173,19 +179,22 @@ class Game:
                 self.run = True
                 self.clock = pygame.time.Clock()
                 self.player = Player(250, 410, 64, 64)
-                self.enemy1 = Enemy(100, 417, 64, 64, 400)
+                
+                self.enemies = []
                 #self.enemy2 = Enemy(50, 417, 64, 64, 300)
                 #self.enemies = [self.enemy1, self.enemy2]
-                self.enemies = []
                 self.window = Window(self.windowHeight, self.windowWidth, self.player, self.enemies)
                 
-        def spawnEnemy(self):
-                self.enemies.append(self.enemy1)
+        def spawnEnemies(self, enemyCount):
+                seed(14)
 
+                for enemy in range(enemyCount):  
+                        self.enemies.append(Enemy(randint(10, 100), 417, 64, 64, randint(300, 400)))
+                        
         def startGame(self):
                 pygame.init()
                 
-                self.spawnEnemy()
+                self.spawnEnemies(1)
 
                 while self.run:
                         self.clock.tick(self.fps) # 54 fps
@@ -194,18 +203,28 @@ class Game:
                                 if event.type == pygame.QUIT:
                                         run = False
 
+                        #player - enemy collision
+                        for enemy in self.enemies:
+                                if enemy.alive:
+                                        if (self.player.hitbox[1] >= enemy.hitbox[1] and self.player.hitbox[1] <= enemy.hitbox[1] + enemy.hitbox[3]) or (self.player.hitbox[1] + self.player.hitbox[3] >= enemy.hitbox[1] and self.player.hitbox[1] + self.player.hitbox[3] <= enemy.hitbox[1] + enemy.hitbox[3]):
+                                                if (self.player.hitbox[0] <= enemy.hitbox[0] + enemy.hitbox[2] and self.player.hitbox[0] >= enemy.hitbox[0]) or (self.player.hitbox[0] + self.player.hitbox[2] >= enemy.hitbox[0] and self.player.hitbox[0] + self.player.hitbox[2] <= enemy.hitbox[0] + enemy.hitbox[2]):
+                                                        self.player.hit()
+
+
                         #check player ammo cooldown
                         if self.player.ammoCooldown > 0:
                                 self.player.ammoCooldown += 1
                         if self.player.ammoCooldown > 5:
                                 self.player.ammoCooldown = 0
-                                
+                        
+                        #projectile hit enemy
                         for projectile in self.player.projectiles:
                                 for enemy in self.enemies:
-                                        if projectile.hitbox[1] >= enemy.hitbox[1] and projectile.hitbox[1] + projectile.hitbox[3] <= enemy.hitbox[1] + enemy.hitbox[3]:
-                                                if projectile.hitbox[0] + projectile.hitbox[2] >= enemy.hitbox[0] and projectile.hitbox[0] <= enemy.hitbox[0] + enemy.hitbox[2]:
-                                                        enemy.hit()
-                                                        self.player.projectiles.pop(self.player.projectiles.index(projectile))
+                                        if enemy.alive:
+                                                if (projectile.hitbox[1] >= enemy.hitbox[1] and projectile.hitbox[1] <= enemy.hitbox[1] + enemy.hitbox[3]) or (projectile.hitbox[1] + projectile.hitbox[3] >= enemy.hitbox[1] and projectile.hitbox[1] + projectile.hitbox[3] <= enemy.hitbox[1] + enemy.hitbox[3]):
+                                                        if (projectile.hitbox[0] <= enemy.hitbox[0] + enemy.hitbox[2] and projectile.hitbox[0] >= enemy.hitbox[0]) or (projectile.hitbox[0] + projectile.hitbox[2] >= enemy.hitbox[0] and projectile.hitbox[0] + projectile.hitbox[2] <= enemy.hitbox[0] + enemy.hitbox[2]):
+                                                                enemy.hit()
+                                                                self.player.projectiles.pop(self.player.projectiles.index(projectile))
 
                                 if projectile.x < self.windowWidth and projectile.x > 0: #projectile onscreen
                                         projectile.x += projectile.vel
