@@ -14,7 +14,8 @@ from player import Player
         Author: Joey Yang
 '''
 
-ENEMY_COUNT = 1
+ENEMY_COUNT = 2
+SEED_NUMBER = 14
 
 class Game:
         def __init__(self):
@@ -31,7 +32,7 @@ class Game:
                 self.window = Window(self.windowHeight, self.windowWidth, self.player, self.enemies)
                 
         def spawnEnemies(self, enemyCount):
-                seed(14)
+                seed(SEED_NUMBER)
 
                 for enemy in range(enemyCount):  
                         self.enemies.append(Enemy(randint(10, 100), 417, 64, 64, randint(300, 400)))
